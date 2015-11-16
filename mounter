@@ -1,0 +1,12 @@
+#! /bin/sh
+
+sudo mount -o loop mydisk /mnt
+echo 'ls /mnt'
+ls /mnt
+echo 'ls /mnt/X'
+ls /mnt/X
+echo 'ls /mnt/Y'
+ls /mnt/Y
+echo 'ls /mnt/Z'
+ls /mnt/Z
+sudo umount /mnt
