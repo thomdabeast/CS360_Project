@@ -13,7 +13,7 @@ MOUNT mounttab[5];
 GD *ggp;
 SUPER *ssp;
 char names[64][128],*name[64];
-int fd, dev, n, DEBUG, inode_table;
+int fd, dev, n, DEBUG, inode_table, inode_start;
 int nblocks, ninodes, bmap, imap, iblock;
 char pathname[256], parameter[256];
 char *disk = "mydisk";
@@ -65,9 +65,10 @@ char* dirName(char *path)
 
 char* baseName(char *path)
 {
-	char base[128];
-	memset(base, path, strlen(path) - strlen(dirname));
-	return base;
+	char *p = malloc(sizeof(char) * 128);
+	memcpy(p, path,(int)(strlen(path) - strlen(dirname)));
+
+	return p;
 }
 
 //given a pathname, this function splits pathname at the / characters
@@ -247,7 +248,7 @@ void print_inode(INODE *ino)
 	printf("inode->i_links_count:\t%d\n", ino->i_links_count);
 }
 
-void ls(char* pathname)
+int ls(char* pathname)
 {
 	printf("OK\n");
 	int i;
@@ -319,7 +320,7 @@ void cd(char *path)
 	}
 }
 
-int mymkdir(MINODE *pip, char *name)
+int cmymkdir(MINODE *pip, char *name)
 {
 
 }
@@ -329,7 +330,7 @@ int createDirEntry(MINODE *parent, int ino, int type, char *name)
 
 }
 
-int mkdir(char *path)
+int mymkdir(char *path)
 {
 	int pino;
 	MINODE *mip, *pip;
@@ -349,8 +350,8 @@ int mkdir(char *path)
  		}
  	} 
  
-	child = dirName();
-	parent = baseName();
+	child = dirName(path);
+	parent = baseName(path);
 
 	pino = getino2(&dev, parent);
   if(pino == -1)
@@ -367,7 +368,7 @@ int mkdir(char *path)
 	}
 
 	// Check if dir already exists
-	if (search2(pip, child) != -1)
+	if (search2(&pip->INODE, child) != -1)
 	{
 		printf("Directory already exists.\n");
 	}
@@ -390,7 +391,7 @@ int menu()
 
 // Function pointer for clean code
 int (*fptr[])(char*) = 
-	{(int(*)())mkdir, ls, quit, menu, 0};
+	{(int(*)())mymkdir, ls, quit, menu, 0};
 char *cmd[] = 
 	{"mkdir", "ls", "quit", "menu", 0};
 
@@ -409,7 +410,7 @@ int findCommand(char *command)
 
 
 
-main(int argc, char *argv[ ])
+int main(int argc, char *argv[ ])
 {
 	char command[64];
 	char path[128], input[256];

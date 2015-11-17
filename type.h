@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include <ext2fs/ext2_fs.h>
+#include "ext2_fs.h"
 #include <libgen.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -101,6 +101,3 @@ typedef struct Mount{
         char   name[256]; 
         char   mount_name[64];
 } MOUNT;
-
-
-MINODE *iget();

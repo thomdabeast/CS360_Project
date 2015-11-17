@@ -1,5 +1,3 @@
 #! /bin/sh
 
-cc -w -m32 -std=c99 -o project main.c util.o
-
-project mydisk
+gcc -w -m32 -std=c99 -o project main.c util.o
