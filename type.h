@@ -6,6 +6,7 @@
 #include <libgen.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <time.h>
 
 typedef unsigned char  u8;
 typedef unsigned short u16;
@@ -101,3 +102,6 @@ typedef struct Mount{
         char   name[256]; 
         char   mount_name[64];
 } MOUNT;
+
+int ninodes, bmap;
+MINODE minode[NMINODE];

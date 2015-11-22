@@ -7,14 +7,13 @@
 //#include </home/braedongraika/type.h>
 #include "type.h"
 
-MINODE minode[NMINODE];
 MINODE *root;
 PROC   proc[NPROC], *running;
 MOUNT  mounttab[5];
 
 char names[64][128],*name[64];
 int fd, dev, n;
-int nblocks, ninodes, bmap, imap, inode_table, iblock;
+int nblocks, imap, inode_table, iblock;
 char pathname[256], parameter[256];
 int DEBUG;
 
@@ -23,123 +22,6 @@ SUPER *ssp;
 PROC P0;
 PROC P1;
 char *disk = "mydisk";
-
-int tst_bit(char *buffer, int b)
-{
-    int byte = b / 8;
-    int bit = b % 8;
-    
-    if (byte & (1 << bit))
-        return 1;
-    else
-        return 0;
-}
-
-int get_bit(char *buffer, int index)
-{
-    int byte = index / 8;
-    int bit = index % 8;
-    
-    if(buffer[byte] & (1 << bit))
-        return 1;
-    else
-        return 0;
-}
-
-int set_bit(char *buf, int bit) // set bit_th bit in char buf[1024] to 1
-{
-    int i,j;
-    i = bit / 8;
-    j = bit % 8;
-    buf[i] |= (1 << j);
-    return 1;
-}
-
-int clear_bit(char *buf, int bit) // clear bit_th bit in char buf[1024] to 0
-{
-    int i, j;
-    i = bit / 8;
-    j = bit % 8;
-    buf[i] &= ~(1 << j);
-    return 1;
-}
-
-int decFreeInodes(int dev)
-{
-    char buf[BLKSIZE];
-    
-    // dec free inodes count in SUPER and GD
-    get_block(dev, 1, buf);
-    sp = (SUPER *)buf;
-    sp->s_free_inodes_count--;
-    put_block(dev, 1, buf);
-    
-    get_block(dev, 2, buf);
-    gp = (GD *)buf;
-    gp->bg_free_inodes_count--;
-    put_block(dev, 2, buf);
-}
-
-int ialloc(int dev)
-{
-    int  i;
-    char buf[BLKSIZE];
-    
-    // read inode_bitmap block
-    get_block(dev, IBITMAP, buf);
-    
-    for (i=0; i < ninodes; i++){
-        if (tst_bit(buf, i)==0){
-            set_bit(buf,i);
-            decFreeInodes(dev);
-            
-            put_block(dev, IBITMAP, buf);
-            
-            return i+1;
-        }
-    }
-    printf("ialloc(): no more free inodes\n");
-    return 0;
-}
-
-int balloc(int dev)
-{
-    char buffer[BLKSIZE];
-    get_block(dev, BBITMAP, buffer);
-    
-    int  i;
-    for (i = 0; i < ninodes; i++)
-    {
-        if (tst_bit(bmap, i) == 0)
-        {
-            set_bit(&bmap, i);
-            put_block(dev, BBITMAP, buffer);
-            return i;
-        }
-    }
-    printf("balloc(): no more free blocks\n");
-    return -1;
-}
-
-MINODE *mialloc()
-{
-    MINODE *temp;
-    for(int i =0; i < 100; i++)
-    {
-        if(minode[i].refCount == 0)
-        {
-            temp = &minode[i];
-            return temp;
-        }
-    }
-    
-    return temp;
-}
-
-int midealloc(MINODE *mip)
-{
-    mip->refCount = 0;
-}
 
 
 //function that initializes P0,P1,minode[],and root;
@@ -187,7 +69,7 @@ void mount_root()
 
     root = iget(fd, 2);
     proc[0].cwd = iget(fd, 2);
-    proc[1].cwd = iget(fd, 2);\
+    proc[1].cwd = iget(fd, 2);
 }
 
 void gd()
@@ -225,17 +107,19 @@ void ls(char* pathname)
     int ino, dev = running->cwd->dev;
     MINODE *mip = running->cwd;
     //check if a pathname is given and if it starts in root
-    if(pathname)
+    if(strcmp(pathname, "") && strcmp(pathname, "/"))
     {
       if(pathname[0] == '/')
       {
-          dev = root->dev;
+        dev = root->dev;
       }
       ino = getino(&dev, pathname);
       mip = iget(dev, ino);
 
       printf("ls:ino %d\n", mip->ino);
     }
+
+    printf("mip->ino %d\n", mip->ino);
 
     //get inode
     int iblock = ((mip->ino - 1) / 8) + inode_table;
@@ -412,7 +296,7 @@ int main(int argc, char *argv[ ])
         sscanf(input, "%s %s", command, path);
         
         // check for no input
-        if (strcmp(command, "") == 0 || strcmp(path, "") == 0)
+        if (strcmp(command, "") == 0 || command == NULL)
         {
             continue;
         }
